@@ -1,0 +1,9 @@
+# 민감 정보 — 절대 커밋 금지
+*.tfvars
+*.tfstate
+*.tfstate.*
+.terraform/
+*.tfvars.json
+
+# Terraform 잠금파일은 올림 (이건 커밋해야 함)
+!.terraform.lock.hcl
