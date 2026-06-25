@@ -15,19 +15,15 @@ resource "azurerm_key_vault" "main" {
   tags = local.common_tags
 }
 
-# 내 계정에 "이 Key Vault의 시크릿을 관리할 수 있는" 권한 부여
-resource "azurerm_role_assignment" "kv_admin" {
-  scope                = azurerm_key_vault.main.id
-  role_definition_name = "Key Vault Secrets Officer"
-  principal_id         = data.azurerm_client_config.current.object_id
-}
-
 # DB 비밀번호를 Key Vault에 시크릿으로 저장
 resource "azurerm_key_vault_secret" "db_password" {
   name         = "db-admin-password"
   value        = var.db_admin_password
   key_vault_id = azurerm_key_vault.main.id
-
-  # 권한이 먼저 부여된 뒤에 시크릿을 쓸 수 있으므로 명시적 의존성
-  depends_on = [azurerm_role_assignment.kv_admin]
 }
+
+# 참고: Key Vault 시크릿 접근 권한(Key Vault Secrets Officer)은
+# Terraform이 아닌 Azure CLI로 별도 관리함.
+# 이유: 권한 부여 주체가 로컬(사용자)과 CI(Service Principal)에 따라 달라져
+#       매 실행마다 replace가 발생하고, SP는 roleAssignments 관리 권한이 없어 실패함.
+#       IAM(권한)과 인프라 프로비저닝을 분리하는 것이 최소권한 원칙에도 부합함.
